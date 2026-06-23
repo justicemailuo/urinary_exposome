@@ -1,0 +1,57 @@
+{
+  "project": "urinary_exposome_rag",
+  "date_range": {
+    "start": "2010/01/01",
+    "end": "2026/06/10"
+  },
+  "language_filter": "english[Language]",
+  "disease_groups": {
+    "chronic_kidney_disease": {
+      "label_zh": "慢性肾病/肾功能下降",
+      "query": "\"chronic kidney disease\" OR CKD OR \"renal function\" OR \"kidney function\" OR \"estimated glomerular filtration rate\" OR eGFR OR albuminuria"
+    },
+    "acute_kidney_injury": {
+      "label_zh": "急性肾损伤",
+      "query": "\"acute kidney injury\" OR AKI"
+    },
+    "urolithiasis": {
+      "label_zh": "泌尿系结石",
+      "query": "urolithiasis OR nephrolithiasis OR \"kidney stone\" OR \"urinary stone\""
+    },
+    "bladder_cancer": {
+      "label_zh": "膀胱癌",
+      "query": "\"bladder cancer\" OR \"urinary bladder neoplasms\""
+    },
+    "renal_cancer": {
+      "label_zh": "肾癌",
+      "query": "\"kidney cancer\" OR \"renal cell carcinoma\" OR \"renal cancer\""
+    },
+    "urinary_tract_infection": {
+      "label_zh": "尿路感染",
+      "query": "\"urinary tract infection\" OR UTI OR pyelonephritis"
+    },
+    "lower_urinary_tract_symptoms": {
+      "label_zh": "下尿路症状/前列腺增生",
+      "query": "\"lower urinary tract symptoms\" OR LUTS OR \"benign prostatic hyperplasia\" OR BPH OR nocturia"
+    }
+  },
+  "exposure_domains": {
+    "lifestyle": {
+      "label_zh": "生活方式暴露",
+      "query": "smoking OR tobacco OR alcohol OR diet OR \"dietary pattern\" OR \"physical activity\" OR exercise OR sedentary OR sleep OR obesity OR \"body mass index\" OR BMI"
+    },
+    "environmental_pollution": {
+      "label_zh": "环境污染暴露",
+      "query": "\"air pollution\" OR PM2.5 OR PM10 OR \"particulate matter\" OR nitrogen dioxide OR NO2 OR ozone OR O3 OR \"heavy metals\" OR arsenic OR cadmium OR lead OR mercury OR PFAS OR pesticide OR phthalate OR bisphenol OR \"water pollution\" OR \"drinking water\""
+    },
+    "climate_built_environment": {
+      "label_zh": "气候与建成环境暴露",
+      "query": "temperature OR heat OR \"heat wave\" OR humidity OR climate OR \"climate change\" OR \"green space\" OR greenness OR NDVI OR noise OR \"built environment\" OR urbanization OR traffic"
+    },
+    "baseline_disease": {
+      "label_zh": "基线疾病/共病暴露",
+      "query": "hypertension OR diabetes OR \"diabetes mellitus\" OR cardiovascular OR \"metabolic syndrome\" OR gout OR hyperuricemia OR dyslipidemia OR \"baseline disease\" OR comorbidity OR multimorbidity"
+    }
+  },
+  "article_type_hint": "Observational studies, cohort studies, case-control studies, cross-sectional studies, systematic reviews, and meta-analyses are all eligible for the initial RAG corpus."
+}

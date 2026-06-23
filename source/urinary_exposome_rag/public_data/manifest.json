@@ -1,0 +1,18 @@
+{
+  "package": "urological_exposome_public_data_v0.1",
+  "created_utc": "2026-06-23T13:18:49.017306+00:00",
+  "description": "Sanitized public data package for UrologicalExpomics RAG. Long text fields such as abstracts and snippets are removed.",
+  "counts": {
+    "data/tables/pubmed_records_metadata.csv": 129,
+    "data/effects/effect_estimates_high_confidence.csv": 37,
+    "data/effects/effect_estimates_fulltext_high_confidence.csv": 244,
+    "data/effects/effect_estimates_urological_expomics_local.csv": 49769
+  },
+  "excluded": [
+    "raw PubMed abstracts",
+    "full-text XML/article text",
+    "RAG text chunks",
+    "Chroma/Neo4j/LightRAG database directories",
+    ".env files and credentials"
+  ]
+}

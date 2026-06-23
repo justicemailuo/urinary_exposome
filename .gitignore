@@ -35,6 +35,9 @@ models/
 Thumbs.db
 .vscode/
 
+# Local release artifacts
+releases/
+
 # Generated data. Keep the public GitHub repository code-first by default.
 source/urinary_exposome_rag/data/raw/
 source/urinary_exposome_rag/data/fulltext/

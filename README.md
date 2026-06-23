@@ -105,6 +105,29 @@ Open:
 http://127.0.0.1:8501
 ```
 
+## Using the Bundled Public Data
+
+The repository includes a sanitized `source/urinary_exposome_rag/public_data/` directory. It contains structured effect-estimate tables and PubMed metadata with abstracts and long snippets removed. This allows new users to run the workflow without access to the original local machine data.
+
+After cloning the repository, install the bundled public data:
+
+```powershell
+python .\source\urinary_exposome_rag\scripts\install_public_data.py
+```
+
+Then build the Chroma index:
+
+```powershell
+cd .\source\urinary_exposome_rag\rag_v2
+.\.venv\Scripts\python.exe .\scripts\build_chroma_index.py --reset --batch-size 64
+```
+
+For a quick smoke test:
+
+```powershell
+.\.venv\Scripts\python.exe .\scripts\build_chroma_index.py --reset --batch-size 16 --limit 500
+```
+
 ## Optional Neo4j Graph Layer
 
 Start Neo4j:
@@ -154,6 +177,20 @@ Return the full JSON response:
 ```powershell
 python .\scripts\query_rag.py "What evidence links PFAS to bladder cancer?" --json
 ```
+
+## Public Data Release
+
+The Git repository is code-first and does not commit raw generated databases, local model caches, or full-text corpora. For users who want a more ready-to-use starting point, a sanitized public data package can be distributed through GitHub Releases.
+
+The recommended release package includes structured evidence tables and PubMed metadata while removing long copyrighted text fields such as abstracts and snippets. See `DATA_AVAILABILITY.md` for the rationale and detailed file list.
+
+To create the release ZIP locally:
+
+```powershell
+python .\source\urinary_exposome_rag\scripts\create_public_data_release.py
+```
+
+The generated ZIP under `releases/` can be uploaded manually to a GitHub Release. Users can then download the ZIP, extract it into `source/urinary_exposome_rag/`, provide their own OpenAI-compatible model API key in `.env`, rebuild the Chroma index, and start the web application.
 
 ## Suggested Manuscript Description
 
