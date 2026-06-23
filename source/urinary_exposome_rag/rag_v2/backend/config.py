@@ -37,3 +37,9 @@ NEO4J_WORKSPACE = os.environ.get("NEO4J_WORKSPACE", "urological_expomics")
 LIGHTRAG_ENABLED = os.environ.get("RAG_LIGHTRAG_ENABLED", "false").lower() in {"1", "true", "yes", "on"}
 LIGHTRAG_MODE = os.environ.get("RAG_LIGHTRAG_MODE", "hybrid")
 LIGHTRAG_TOP_K = int(os.environ.get("RAG_LIGHTRAG_TOP_K", "20"))
+
+DEMO_API_ENABLED = os.environ.get("RAG_DEMO_API_ENABLED", "true").lower() in {"1", "true", "yes", "on"}
+DEMO_API_FREE_CALLS = int(os.environ.get("RAG_DEMO_API_FREE_CALLS", "10"))
+DEMO_API_QUOTA_FILE = Path(
+    os.environ.get("RAG_DEMO_API_QUOTA_FILE", str(PROJECT_DIR / "data" / "demo_api_quota.json"))
+)

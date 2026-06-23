@@ -22,6 +22,10 @@ class ChatRequest(BaseModel):
     temperature: float = Field(0.1, ge=0.0, le=1.0)
     use_graph: bool = True
     use_lightrag: bool = False
+    demo_client_id: str | None = Field(default=None, max_length=128)
+    user_api_key: str | None = Field(default=None, max_length=4096)
+    user_base_url: str | None = Field(default=None, max_length=512)
+    user_model: str | None = Field(default=None, max_length=256)
 
 
 class Source(BaseModel):
@@ -55,6 +59,11 @@ class ChatResponse(BaseModel):
     graph_error: str | None = None
     lightrag_context: str | None = None
     lightrag_error: str | None = None
+    llm_provider: str | None = None
+    demo_usage_used: int | None = None
+    demo_usage_remaining: int | None = None
+    demo_usage_limit: int | None = None
+    needs_user_api_key: bool = False
     elapsed_ms: int
 
 

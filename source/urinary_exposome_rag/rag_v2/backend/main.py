@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from .llm import vllm_status
 from .graph_store import build_graph, graph_status, search_graph
 from .lightrag_bridge import index_lightrag, lightrag_status
+from .quota import make_client_key
 from .rag import run_chat, run_search
 from .schemas import ChatRequest, ChatResponse, GraphSearchResponse, IndexRequest, RagFilters, SearchResponse
 from .vector_store import build_index, index_status
@@ -34,8 +35,15 @@ def health() -> dict[str, object]:
 
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
-    return await run_chat(request)
+async def chat(request: ChatRequest, http_request: Request) -> ChatResponse:
+    forwarded_for = http_request.headers.get("x-forwarded-for", "")
+    client_host = forwarded_for.split(",", 1)[0].strip() if forwarded_for else ""
+    if not client_host and http_request.client:
+        client_host = http_request.client.host
+    user_agent = http_request.headers.get("user-agent", "")
+    fallback_identity = f"{client_host}|{user_agent}"
+    client_key = make_client_key(request.demo_client_id, fallback_identity)
+    return await run_chat(request, client_key=client_key)
 
 
 @app.post("/api/search", response_model=SearchResponse)

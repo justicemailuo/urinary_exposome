@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import uuid
 from typing import Any
 
 import pandas as pd
@@ -129,7 +130,10 @@ def render_sources(sources: list[dict[str, Any]]) -> None:
 
 def page_chat() -> None:
     st.title("RAG Chat")
-    st.caption("FastAPI -> Chroma/bge-m3 -> Qwen2.5-7B-Instruct via vLLM, with retrieval fallback.")
+    st.caption("FastAPI -> Chroma/bge-m3 -> optional Neo4j/LightRAG -> OpenAI-compatible model, with retrieval fallback.")
+    if "demo_client_id" not in st.session_state:
+        st.session_state["demo_client_id"] = str(uuid.uuid4())
+
     query = st.text_area(
         "Question",
         value="UKB 中 PM2.5 和肾癌的 HR 结果是什么？请把我的本地数据和论文证据分开回答。",
@@ -157,6 +161,23 @@ def page_chat() -> None:
             help="Requires RAG_LIGHTRAG_ENABLED=true and an existing LightRAG index.",
         )
 
+    with st.sidebar.expander("Model API", expanded=False):
+        st.caption("Default demo API allows limited free calls. After that, use your own OpenAI-compatible API key.")
+        user_base_url = st.text_input(
+            "Your API base URL",
+            value="https://yunwu.ai/v1",
+            key="user_base_url",
+            help="Do not include /chat/completions.",
+        )
+        user_model = st.text_input("Your model", value="gpt-5.4-nano:stable", key="user_model")
+        user_api_key = st.text_input(
+            "Your API key",
+            value="",
+            type="password",
+            key="user_api_key",
+            help="Sent only to this backend for the current request; it is not saved by the app.",
+        )
+
     current_filters = filters("chat_")
     if st.button("Ask", type="primary", use_container_width=True):
         payload = {
@@ -166,8 +187,13 @@ def page_chat() -> None:
             "temperature": temperature,
             "use_graph": use_graph,
             "use_lightrag": use_lightrag,
+            "demo_client_id": st.session_state["demo_client_id"],
             "filters": current_filters,
         }
+        if user_api_key.strip():
+            payload["user_api_key"] = user_api_key.strip()
+            payload["user_base_url"] = user_base_url.strip()
+            payload["user_model"] = user_model.strip()
         with st.spinner("Retrieving evidence and generating answer..."):
             try:
                 result = api_post("/api/chat", payload)
@@ -182,8 +208,17 @@ def page_chat() -> None:
             f"Sources: {len(result.get('sources', []))} | "
             f"local: {result.get('source_groups', {}).get('local_data', 0)} | "
             f"literature: {result.get('source_groups', {}).get('literature', 0)} | "
-            f"{result.get('elapsed_ms')} ms | LLM used: {result.get('llm_used')}"
+            f"{result.get('elapsed_ms')} ms | LLM used: {result.get('llm_used')} | "
+            f"provider: {result.get('llm_provider') or 'none'}"
         )
+        if result.get("demo_usage_limit") is not None:
+            st.caption(
+                f"Demo API usage: {result.get('demo_usage_used', 0)}/"
+                f"{result.get('demo_usage_limit', 0)} used; "
+                f"{result.get('demo_usage_remaining', 0)} remaining."
+            )
+        if result.get("needs_user_api_key"):
+            st.error("Free demo calls are used up. Please open Model API in the sidebar and enter your own API key.")
         if result.get("llm_error"):
             st.warning(result["llm_error"])
         if result.get("graph_error"):

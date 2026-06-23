@@ -3,10 +3,11 @@ from __future__ import annotations
 import asyncio
 import time
 
-from .config import MAX_CONTEXT_CHARS
+from .config import DEMO_API_ENABLED, MAX_CONTEXT_CHARS, VLLM_BASE_URL, VLLM_MODEL
 from .graph_store import search_graph
 from .lightrag_bridge import query_lightrag
 from .llm import build_prompt, call_vllm_chat
+from .quota import get_usage, has_quota, increment_usage
 from .schemas import ChatRequest, ChatResponse, RagFilters, SearchResponse, Source
 from .vector_store import search
 
@@ -52,7 +53,7 @@ def retrieval_answer(query: str, sources: list[Source]) -> str:
     else:
         lines.append("- 当前结果中没有匹配的本地 UrologicalExpomics 证据。")
 
-    lines.extend(["", "二、已发表论文／全文表格证据"])
+    lines.extend(["", "二、已发表论文/全文表格证据"])
     if literature:
         lines.extend(format_effect(source) for source in literature[:6])
     else:
@@ -63,7 +64,7 @@ def retrieval_answer(query: str, sources: list[Source]) -> str:
             "",
             "三、注意事项",
             "- HR/OR/RR、置信区间、P 值和 FDR 来自结构化表格或机器抽取结果；正式写作前请回到原始论文或数据表核对。",
-            "- 开启 vLLM/Qwen 且服务可用时，系统会基于同一批证据生成更自然的中文解释。",
+            "- 开启模型生成且服务可用时，系统会基于同一批证据生成更自然的中文解释。",
         ]
     )
     return "\n".join(lines)
@@ -79,7 +80,14 @@ def run_search(query: str, top_k: int, filters: RagFilters) -> SearchResponse:
     )
 
 
-async def run_chat(request: ChatRequest) -> ChatResponse:
+def _clean(value: str | None) -> str | None:
+    if value is None:
+        return None
+    value = value.strip()
+    return value or None
+
+
+async def run_chat(request: ChatRequest, client_key: str | None = None) -> ChatResponse:
     started = time.time()
     sources = search(query=request.query, top_k=request.top_k, filters=request.filters)
     fallback = retrieval_answer(request.query, sources)
@@ -90,6 +98,8 @@ async def run_chat(request: ChatRequest) -> ChatResponse:
     graph_error: str | None = None
     lightrag_context: str | None = None
     lightrag_error: str | None = None
+    llm_provider: str | None = None
+    needs_user_api_key = False
 
     if request.use_graph:
         try:
@@ -103,19 +113,46 @@ async def run_chat(request: ChatRequest) -> ChatResponse:
         except Exception as error:
             lightrag_error = str(error)
 
+    user_api_key = _clean(request.user_api_key)
+    user_base_url = _clean(request.user_base_url)
+    user_model = _clean(request.user_model)
+    quota = get_usage(client_key or "anonymous")
+
     if request.use_llm and sources:
-        try:
-            prompt = build_prompt(
-                request.query,
-                sources,
-                MAX_CONTEXT_CHARS,
-                graph_paths=graph_paths,
-                lightrag_context=lightrag_context,
-            )
-            answer = await asyncio.to_thread(call_vllm_chat, prompt, request.temperature)
-            llm_used = True
-        except Exception as error:
-            llm_error = f"vLLM/Qwen 不可用，已返回检索兜底答案：{error}"
+        if user_api_key:
+            llm_provider = "user_api"
+            call_kwargs = {
+                "api_key": user_api_key,
+                "base_url": user_base_url or VLLM_BASE_URL,
+                "model": user_model or VLLM_MODEL,
+            }
+        else:
+            llm_provider = "demo_api"
+            call_kwargs = {}
+            if DEMO_API_ENABLED and client_key and not has_quota(client_key):
+                needs_user_api_key = True
+                llm_error = "你的免费 demo 模型调用次数已用完。请在页面中填写自己的 OpenAI-compatible API key 后继续使用。"
+                call_kwargs = {}
+            elif not DEMO_API_ENABLED:
+                needs_user_api_key = True
+                llm_error = "公开 demo 模型调用未启用。请在页面中填写自己的 OpenAI-compatible API key。"
+                call_kwargs = {}
+
+        if not needs_user_api_key:
+            try:
+                prompt = build_prompt(
+                    request.query,
+                    sources,
+                    MAX_CONTEXT_CHARS,
+                    graph_paths=graph_paths,
+                    lightrag_context=lightrag_context,
+                )
+                answer = await asyncio.to_thread(call_vllm_chat, prompt, request.temperature, **call_kwargs)
+                llm_used = True
+                if llm_provider == "demo_api" and client_key:
+                    quota = increment_usage(client_key)
+            except Exception as error:
+                llm_error = f"模型生成不可用，已返回检索兜底答案：{error}"
 
     return ChatResponse(
         answer=answer,
@@ -128,5 +165,10 @@ async def run_chat(request: ChatRequest) -> ChatResponse:
         graph_error=graph_error,
         lightrag_context=lightrag_context,
         lightrag_error=lightrag_error,
+        llm_provider=llm_provider,
+        demo_usage_used=quota["used"],
+        demo_usage_remaining=quota["remaining"],
+        demo_usage_limit=quota["limit"],
+        needs_user_api_key=needs_user_api_key,
         elapsed_ms=int((time.time() - started) * 1000),
     )

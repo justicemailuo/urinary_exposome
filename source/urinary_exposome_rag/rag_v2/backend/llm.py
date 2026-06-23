@@ -55,7 +55,7 @@ def build_prompt(
     lightrag_text = (lightrag_context or "无 LightRAG 补充上下文。")[:1800]
     return (
         "你是泌尿系统疾病暴露组学 RAG 助手。必须使用中文回答，并且只能使用给定证据。\n"
-        "必须将‘我的本地 UrologicalExpomics 数据’与‘已发表论文／全文表格证据’分开讨论。\n"
+        "必须将“我的本地 UrologicalExpomics 数据”与“已发表论文/全文表格证据”分开讨论。\n"
         "不得编造 HR、OR、RR、95% CI、P 值、FDR、PMID、PMCID 或 DOI。\n"
         "若证据来自机器抽取的表格或效应量，需提醒用户正式写作前核对原始来源。\n"
         "引用格式使用 [Source n]。\n\n"
@@ -68,15 +68,25 @@ def build_prompt(
         + lightrag_text
         + "\n\n回答结构：\n"
         "1. 我的本地 UrologicalExpomics 数据\n"
-        "2. 已发表论文／全文表格证据\n"
+        "2. 已发表论文/全文表格证据\n"
         "3. 两类证据是否一致，以及如何解释\n"
         "4. 注意事项和引用来源\n"
     )
 
 
-def call_vllm_chat(prompt: str, temperature: float) -> str:
+def call_vllm_chat(
+    prompt: str,
+    temperature: float,
+    *,
+    base_url: str | None = None,
+    model: str | None = None,
+    api_key: str | None = None,
+) -> str:
+    base_url = (base_url or VLLM_BASE_URL).rstrip("/")
+    model = model or VLLM_MODEL
+    api_key = api_key or VLLM_API_KEY
     payload: dict[str, Any] = {
-        "model": VLLM_MODEL,
+        "model": model,
         "messages": [
             {
                 "role": "system",
@@ -88,9 +98,9 @@ def call_vllm_chat(prompt: str, temperature: float) -> str:
         "max_tokens": 450,
     }
     response = requests.post(
-        f"{VLLM_BASE_URL.rstrip('/')}/chat/completions",
+        f"{base_url}/chat/completions",
         json=payload,
-        headers={"Authorization": f"Bearer {VLLM_API_KEY}"},
+        headers={"Authorization": f"Bearer {api_key}"},
         timeout=LLM_TIMEOUT_SECONDS,
     )
     try:

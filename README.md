@@ -164,6 +164,20 @@ Only the base URL should be provided in `VLLM_BASE_URL`; the application appends
 
 Do not upload `.env` files or API keys to GitHub.
 
+### Demo API quota
+
+For a hosted public demo, the server can provide a limited number of free model calls using the server-side API key. By default, each browser/client receives 10 successful demo model calls. After the quota is exhausted, the Streamlit UI asks the user to enter their own OpenAI-compatible API key.
+
+Configure this in `source/urinary_exposome_rag/rag_v2/.env`:
+
+```env
+RAG_DEMO_API_ENABLED=true
+RAG_DEMO_API_FREE_CALLS=10
+RAG_DEMO_API_QUOTA_FILE=./data/demo_api_quota.json
+```
+
+The server-side demo API key remains in `.env` and is never sent to the browser. User-provided API keys are sent only to the backend for the current request and are not stored by the app. For a serious public service, add HTTPS, login, rate limiting, and abuse monitoring.
+
 ## Command-Line Query
 
 After FastAPI is running, query the system from the command line:
