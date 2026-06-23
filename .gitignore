@@ -1,0 +1,49 @@
+# Secrets and local configuration
+.env
+*.env
+!.env.example
+
+# Python environments and caches
+.venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Logs and runtime outputs
+logs/
+*.log
+*.out.log
+*.err.log
+
+# Large model/cache directories
+models/
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Local databases and generated vector/graph stores
+**/data/chroma*/
+**/data/lightrag_storage/
+**/data/neo4j/
+**/rag_v2/data/neo4j/
+**/docker-data/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Generated data. Keep the public GitHub repository code-first by default.
+source/urinary_exposome_rag/data/raw/
+source/urinary_exposome_rag/data/fulltext/
+source/urinary_exposome_rag/data/fulltext_pdf_selected/
+source/urinary_exposome_rag/data/fulltext_test/
+source/urinary_exposome_rag/data/fulltext_test2/
+source/urinary_exposome_rag/data/rag/
+source/urinary_exposome_rag/data/effects/
+source/urinary_exposome_rag/data/tables/
+
+# Original Shiny bundle and private/local exported datasets.
+source/UrologicalExpomics_original/
