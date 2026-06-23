@@ -13,6 +13,20 @@ The system separates evidence into two major sources:
 
 The web interface allows users to ask natural-language questions and retrieve source-linked answers. Retrieved evidence can be summarized by an OpenAI-compatible language model, while the underlying records, effect estimates, and graph paths remain inspectable.
 
+## Screenshots
+
+### RAG Chat
+
+![RAG Chat interface](docs/images/rag-chat.png)
+
+### Evidence Search
+
+![Evidence Search interface](docs/images/evidence-search.png)
+
+### System Status
+
+![System Status interface](docs/images/system-status.png)
+
 ## Current Evidence Base
 
 The current indexed evidence base contains:
